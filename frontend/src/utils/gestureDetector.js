@@ -35,16 +35,32 @@ const useGestureDetection = () => {
       // 2. Process landmarks through trained ML model
       // 3. Return gesture classification with confidence
       
-      // Placeholder logic - simulate random gesture detection
+      // Enhanced placeholder logic - more realistic behavior
       const gestures = ['A', 'B', 'C', 'D', 'E', 'none']
-      const randomGesture = gestures[Math.floor(Math.random() * gestures.length)]
-      const confidence = randomGesture === 'none' ? 0 : Math.random() * 0.4 + 0.6
       
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Simulate more realistic detection patterns
+      const random = Math.random()
+      let gesture, confidence
+      
+      if (random < 0.3) {
+        // 30% chance of no gesture detected
+        gesture = 'none'
+        confidence = 0
+      } else if (random < 0.8) {
+        // 50% chance of detecting a gesture with good confidence
+        gesture = gestures[Math.floor(Math.random() * 5)] // A, B, C, D, E
+        confidence = Math.random() * 0.3 + 0.7 // 0.7 to 1.0
+      } else {
+        // 20% chance of detecting a gesture with lower confidence
+        gesture = gestures[Math.floor(Math.random() * 5)] // A, B, C, D, E
+        confidence = Math.random() * 0.4 + 0.4 // 0.4 to 0.8
+      }
+      
+      // Simulate processing delay (faster for better UX)
+      await new Promise(resolve => setTimeout(resolve, 50))
       
       return {
-        gesture: randomGesture,
+        gesture: gesture,
         confidence: confidence
       }
     } catch (error) {
