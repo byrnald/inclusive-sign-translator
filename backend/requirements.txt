@@ -1,0 +1,23 @@
+# Flask web framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Machine Learning
+tensorflow==2.13.0
+numpy==1.24.3
+scikit-learn==1.3.0
+joblib==1.3.2
+
+# Mediapipe for hand detection
+mediapipe==0.10.3
+
+# Image processing
+opencv-python==4.8.0.76
+Pillow==10.0.0
+
+# Data processing
+pandas==2.0.3
+
+# Development
+pytest==7.4.0
+python-dotenv==1.0.0
