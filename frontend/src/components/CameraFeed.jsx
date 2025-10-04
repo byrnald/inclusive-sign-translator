@@ -7,7 +7,7 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [error, setError] = useState(null)
   
-  const { detectGesture } = useGestureDetection()
+  const { detectGesture, startDetection, stopDetection, isInitialized } = useGestureDetection()
 
   useEffect(() => {
     const initializeCamera = async () => {
@@ -44,10 +44,10 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
   }, [])
 
   useEffect(() => {
-    if (!isDetecting || !isCameraReady) return
+    if (!isDetecting || !isCameraReady || !isInitialized) return
 
     const detectLoop = async () => {
-      if (videoRef.current && canvasRef.current) {
+      if (videoRef.current) {
         const gesture = await detectGesture(videoRef.current)
         if (gesture && gesture.gesture !== 'none') {
           onGestureDetected(gesture.gesture, gesture.confidence)
@@ -60,7 +60,16 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
     }
 
     detectLoop()
-  }, [isDetecting, isCameraReady, detectGesture, onGestureDetected])
+  }, [isDetecting, isCameraReady, isInitialized, detectGesture, onGestureDetected])
+
+  // Handle Mediapipe camera integration
+  useEffect(() => {
+    if (isDetecting && isCameraReady && isInitialized && videoRef.current) {
+      startDetection(videoRef.current)
+    } else if (!isDetecting) {
+      stopDetection()
+    }
+  }, [isDetecting, isCameraReady, isInitialized, startDetection, stopDetection])
 
   if (error) {
     return (

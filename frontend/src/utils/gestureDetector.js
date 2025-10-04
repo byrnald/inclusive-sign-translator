@@ -1,52 +1,75 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { MediapipeHandDetector, extractHandLandmarks, calculateHandFeatures } from './mediapipe'
+import { gestureAPI } from './api'
 
-// Placeholder gesture detection logic
-// This will be replaced with actual Mediapipe + ML model integration
-
+// Real gesture detection using Mediapipe + ML model integration
 const useGestureDetection = () => {
   const [isInitialized, setIsInitialized] = useState(false)
+  const [isDetecting, setIsDetecting] = useState(false)
+  const handDetectorRef = useRef(null)
+  const lastDetectionTime = useRef(0)
+  const detectionInterval = 200 // Detect every 200ms to avoid overwhelming the system
 
-  // Initialize Mediapipe Hands (placeholder)
+  // Initialize Mediapipe Hands
   const initializeMediapipe = useCallback(async () => {
     try {
-      // TODO: Initialize Mediapipe Hands
-      // const hands = new Hands({
-      //   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-      // })
+      if (handDetectorRef.current) {
+        return true
+      }
+
+      handDetectorRef.current = new MediapipeHandDetector()
+      const success = await handDetectorRef.current.initialize()
       
-      console.log('Mediapipe Hands initialized (placeholder)')
-      setIsInitialized(true)
-      return true
+      if (success) {
+        console.log('Mediapipe Hands initialized successfully')
+        setIsInitialized(true)
+        return true
+      } else {
+        console.error('Failed to initialize Mediapipe Hands')
+        return false
+      }
     } catch (error) {
       console.error('Failed to initialize Mediapipe:', error)
       return false
     }
   }, [])
 
-  // Detect gesture from video frame (placeholder)
+  // Detect gesture from video frame using Mediapipe
   const detectGesture = useCallback(async (videoElement) => {
-    if (!isInitialized) {
+    if (!isInitialized || !handDetectorRef.current) {
       await initializeMediapipe()
     }
 
+    // Throttle detection to avoid overwhelming the system
+    const now = Date.now()
+    if (now - lastDetectionTime.current < detectionInterval) {
+      return { gesture: 'none', confidence: 0 }
+    }
+    lastDetectionTime.current = now
+
     try {
-      // TODO: Implement actual gesture detection
-      // 1. Extract hand landmarks using Mediapipe
-      // 2. Process landmarks through trained ML model
-      // 3. Return gesture classification with confidence
+      // Set up results callback for Mediapipe
+      let detectionResult = { gesture: 'none', confidence: 0 }
       
-      // Placeholder logic - simulate random gesture detection
-      const gestures = ['A', 'B', 'C', 'D', 'E', 'none']
-      const randomGesture = gestures[Math.floor(Math.random() * gestures.length)]
-      const confidence = randomGesture === 'none' ? 0 : Math.random() * 0.4 + 0.6
+      handDetectorRef.current.setResultsCallback((results) => {
+        const landmarks = extractHandLandmarks(results)
+        
+        if (landmarks) {
+          const features = calculateHandFeatures(landmarks)
+          
+          if (features) {
+            // For now, use simple rule-based detection
+            // TODO: Replace with actual ML model classification
+            const gesture = classifyGestureFromFeatures(features)
+            detectionResult = gesture
+          }
+        }
+      })
+
+      // Process the current video frame
+      await handDetectorRef.current.hands.send({ image: videoElement })
       
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      return {
-        gesture: randomGesture,
-        confidence: confidence
-      }
+      return detectionResult
     } catch (error) {
       console.error('Gesture detection error:', error)
       return {
@@ -56,9 +79,53 @@ const useGestureDetection = () => {
     }
   }, [isInitialized, initializeMediapipe])
 
+  // Simple rule-based gesture classification (placeholder for ML model)
+  const classifyGestureFromFeatures = (features) => {
+    const { distances, angles } = features
+    
+    // Simple rules based on finger distances and angles
+    // These are placeholder rules - replace with actual ML model
+    if (distances.thumbIndex < 0.1) {
+      return { gesture: 'A', confidence: 0.8 }
+    } else if (distances.thumbIndex > 0.2 && distances.indexMiddle < 0.1) {
+      return { gesture: 'B', confidence: 0.7 }
+    } else if (distances.thumbIndex > 0.15 && distances.indexMiddle > 0.15) {
+      return { gesture: 'C', confidence: 0.75 }
+    } else if (distances.thumbIndex > 0.2 && distances.indexMiddle > 0.1) {
+      return { gesture: 'D', confidence: 0.7 }
+    } else if (distances.thumbIndex > 0.25) {
+      return { gesture: 'E', confidence: 0.8 }
+    }
+    
+    return { gesture: 'none', confidence: 0 }
+  }
+
+  // Start continuous detection
+  const startDetection = useCallback(async (videoElement) => {
+    if (!isInitialized) {
+      await initializeMediapipe()
+    }
+    
+    if (handDetectorRef.current) {
+      setIsDetecting(true)
+      await handDetectorRef.current.startCamera(videoElement)
+    }
+  }, [isInitialized, initializeMediapipe])
+
+  // Stop detection
+  const stopDetection = useCallback(() => {
+    if (handDetectorRef.current) {
+      handDetectorRef.current.stopCamera()
+      setIsDetecting(false)
+    }
+  }, [])
+
   return {
     detectGesture,
-    isInitialized
+    startDetection,
+    stopDetection,
+    isInitialized,
+    isDetecting
   }
 }
 

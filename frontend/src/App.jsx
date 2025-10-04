@@ -2,15 +2,23 @@ import React, { useState } from 'react'
 import CameraFeed from './components/CameraFeed'
 import Header from './components/Header'
 import GestureDisplay from './components/GestureDisplay'
+import { useTextToSpeech } from './utils/textToSpeech'
 
 function App() {
   const [isDetecting, setIsDetecting] = useState(false)
   const [detectedGesture, setDetectedGesture] = useState('')
   const [confidence, setConfidence] = useState(0)
+  
+  const { speakGesture, isEnabled: ttsEnabled, toggleEnabled: toggleTTS } = useTextToSpeech()
 
   const handleGestureDetected = (gesture, conf) => {
     setDetectedGesture(gesture)
     setConfidence(conf)
+    
+    // Speak the detected gesture
+    if (gesture && gesture !== 'none') {
+      speakGesture(gesture, conf)
+    }
   }
 
   const toggleDetection = () => {
@@ -42,6 +50,12 @@ function App() {
                 className={`btn-primary ${isDetecting ? 'bg-red-600 hover:bg-red-700' : ''}`}
               >
                 {isDetecting ? 'Stop Detection' : 'Start Detection'}
+              </button>
+              <button 
+                onClick={toggleTTS}
+                className={`btn-secondary ${ttsEnabled ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              >
+                {ttsEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
               </button>
               <button className="btn-secondary">
                 Calibrate
