@@ -197,6 +197,9 @@ def test_finger_detection():
         
         frame = cv2.resize(frame, (640, 480))
         
+        # Flip the frame horizontally for mirror effect
+        frame = cv2.flip(frame, 1)
+        
         # Detect fingers
         fingers_detected, finger_points = detector.detect_fingers(frame)
         

@@ -263,6 +263,9 @@ def test_improved_hand_detection():
         # Resize frame for better performance
         frame = cv2.resize(frame, (640, 480))
         
+        # Flip the frame horizontally for mirror effect
+        frame = cv2.flip(frame, 1)
+        
         # Detect hands
         hand_detected, landmarks = detector.detect_hands(frame)
         
