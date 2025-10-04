@@ -16,8 +16,7 @@
     "@mediapipe/control_utils": "^0.6.1675465854",
     "@mediapipe/drawing_utils": "^0.3.1675465854",
     "@mediapipe/hands": "^0.4.1675465854",
-    "@tensorflow/tfjs": "^4.10.0",
-    "@tensorflow/tfjs-react-native": "^0.8.0"
+    "@tensorflow/tfjs": "^4.10.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
