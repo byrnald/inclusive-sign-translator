@@ -6,6 +6,7 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
   const canvasRef = useRef(null)
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [error, setError] = useState(null)
+  const [retryCount, setRetryCount] = useState(0)
   
   const { detectGesture, startDetection, stopDetection, isInitialized } = useGestureDetection()
 
@@ -29,7 +30,15 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
         }
       } catch (err) {
         console.error('Error accessing camera:', err)
-        setError('Camera access denied or not available')
+        if (err.name === 'NotAllowedError') {
+          setError('Camera access denied. Please allow camera access and refresh the page.')
+        } else if (err.name === 'NotFoundError') {
+          setError('No camera found. Please connect a camera and refresh the page.')
+        } else if (err.name === 'NotReadableError') {
+          setError('Camera is being used by another application. Please close other apps using the camera.')
+        } else {
+          setError('Camera access failed. Please check your camera and try again.')
+        }
       }
     }
 
@@ -41,7 +50,12 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
         tracks.forEach(track => track.stop())
       }
     }
-  }, [])
+  }, [retryCount])
+
+  const retryCamera = () => {
+    setError(null)
+    setRetryCount(prev => prev + 1)
+  }
 
   useEffect(() => {
     if (!isDetecting || !isCameraReady || !isInitialized) return
@@ -77,7 +91,13 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
         <div className="text-center">
           <div className="text-red-400 text-4xl mb-4">📷</div>
           <p className="text-red-400 mb-2">Camera Error</p>
-          <p className="text-gray-400 text-sm">{error}</p>
+          <p className="text-gray-400 text-sm mb-4">{error}</p>
+          <button
+            onClick={retryCamera}
+            className="btn-primary"
+          >
+            Retry Camera
+          </button>
         </div>
       </div>
     )
@@ -111,6 +131,12 @@ const CameraFeed = ({ isDetecting, onGestureDetected }) => {
         {isDetecting && isCameraReady && (
           <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
             <span className="animate-pulse">●</span> Detecting
+          </div>
+        )}
+        
+        {isCameraReady && (
+          <div className="absolute top-4 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <span className="animate-pulse">●</span> Camera Ready
           </div>
         )}
       </div>
